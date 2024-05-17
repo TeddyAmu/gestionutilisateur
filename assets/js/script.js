@@ -1,4 +1,4 @@
-export const students = [
+const students = JSON.parse(localStorage.getItem('students')) || [
     { name: "Sonia", birth: "2019-05-14" },
     { name: "Antoine", birth: "2000-05-12" },
     { name: "Alice", birth: "1990-09-14" },
@@ -17,43 +17,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (addUserForm) {
         addUserForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = e.target.name.value;
+            const name = e.target.name.value.trim(); 
             const birth = e.target.birth.value;
+            
+            if (name === '' || birth === '') { 
+                alert('Veuillez remplir tous les champs.');
+                return; 
+            }
+
             students.push({ name, birth });
             e.target.reset();
             localStorage.setItem('students', JSON.stringify(students));
             alert('Utilisateur ajouté');
+            renderUsers();
         });
     }
 });
+
 
 function renderUsers() {
     const userList = document.getElementById('userList');
     userList.innerHTML = '';
 
-    const storedStudents = JSON.parse(localStorage.getItem('students')) || students;
-
-    storedStudents.forEach(student => {
+    students.forEach(student => {
         const li = document.createElement('li');
-        li.innerHTML = `${student.name} - ${dayjs(student.birth).locale('fr').format('DD MMMM YYYY')}`;
-        const form = document.createElement('form');
-        form.action = '/delete';
-        form.method = 'POST';
-        form.style.display = 'inline';
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'name';
-        input.value = student.name;
+        li.innerHTML = `${student.name} - ${formatDate(student.birth)}`;
         const button = document.createElement('button');
-        button.type = 'submit';
+        button.type = 'button';
         button.innerText = 'Supprimer';
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
+        button.addEventListener('click', () => {
             deleteUser(student.name);
         });
-        form.appendChild(input);
-        form.appendChild(button);
-        li.appendChild(form);
+        li.appendChild(button);
         userList.appendChild(li);
     });
 }
@@ -66,4 +61,10 @@ function deleteUser(name) {
         renderUsers();
         alert('Utilisateur supprimé');
     }
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('fr-FR', options);
 }
